@@ -6,12 +6,13 @@ import consola from "consola"
 import { serve, type ServerHandler } from "srvx"
 import invariant from "tiny-invariant"
 
+import { getAccountsConfig } from "./lib/account-config"
 import { mergeConfigWithDefaults } from "./lib/config"
 import { ensurePaths } from "./lib/paths"
 import { initProxyFromEnv } from "./lib/proxy"
 import { generateEnvScript } from "./lib/shell"
 import { state } from "./lib/state"
-import { setupCopilotToken, setupGitHubToken } from "./lib/token"
+import { setupCopilotToken } from "./lib/token"
 import { cacheModels, cacheVSCodeVersion } from "./lib/utils"
 
 interface RunServerOptions {
@@ -21,7 +22,6 @@ interface RunServerOptions {
   manual: boolean
   rateLimit?: number
   rateLimitWait: boolean
-  githubToken?: string
   claudeCode: boolean
   showToken: boolean
   proxyEnv: boolean
@@ -51,15 +51,26 @@ export async function runServer(options: RunServerOptions): Promise<void> {
   state.rateLimitWait = options.rateLimitWait
   state.showToken = options.showToken
 
+  const accountsConfig = getAccountsConfig()
+  if (accountsConfig.accounts.length === 0) {
+    throw new Error("No accounts configured")
+  }
+
+  const defaultAccount =
+    accountsConfig.accounts.find(
+      (account) => account.id === accountsConfig.defaultAccountId,
+    ) ?? accountsConfig.accounts[0]
+
+  state.accountId = defaultAccount.id
+  state.githubToken = defaultAccount.githubToken
+
+  consola.info(`Using GitHub account "${defaultAccount.id}" from config`)
+  if (state.showToken) {
+    consola.info("GitHub token:", defaultAccount.githubToken)
+  }
+
   await ensurePaths()
   await cacheVSCodeVersion()
-
-  if (options.githubToken) {
-    state.githubToken = options.githubToken
-    consola.info("Using provided GitHub token")
-  } else {
-    await setupGitHubToken()
-  }
 
   await setupCopilotToken()
   await cacheModels()
@@ -170,12 +181,6 @@ export const start = defineCommand({
       description:
         "Wait instead of error when rate limit is hit. Has no effect if rate limit is not set",
     },
-    "github-token": {
-      alias: "g",
-      type: "string",
-      description:
-        "Provide GitHub token directly (must be generated using the `auth` subcommand)",
-    },
     "claude-code": {
       alias: "c",
       type: "boolean",
@@ -207,7 +212,6 @@ export const start = defineCommand({
       manual: args.manual,
       rateLimit,
       rateLimitWait: args.wait,
-      githubToken: args["github-token"],
       claudeCode: args["claude-code"],
       showToken: args["show-token"],
       proxyEnv: args["proxy-env"],

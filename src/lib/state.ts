@@ -4,6 +4,7 @@ export interface State {
   githubToken?: string
   copilotToken?: string
 
+  accountId?: string
   accountType: string
   models?: ModelsResponse
   vsCodeVersion?: string
@@ -19,6 +20,7 @@ export interface State {
 }
 
 export const state: State = {
+  accountId: undefined,
   accountType: "individual",
   manualApprove: false,
   rateLimitWait: false,

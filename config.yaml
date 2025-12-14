@@ -1,0 +1,3 @@
+accounts:
+  - id: primary
+    github_token: ${GITHUB_TOKEN}

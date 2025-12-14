@@ -80,19 +80,16 @@ docker run -p 4141:4141 -v $(pwd)/copilot-data:/root/.local/share/copilot-api co
 > **Note:**
 > The GitHub token and related data will be stored in `copilot-data` on your host. This is mapped to `/root/.local/share/copilot-api` inside the container, ensuring persistence across restarts.
 
-### Docker with Environment Variables
+### Docker with Config + Environment Variables
 
-You can pass the GitHub token directly to the container using environment variables:
+Mount a `config.yaml` into the container and provide any environment variables referenced inside that file (for example `${GITHUB_TOKEN}`):
 
 ```sh
-# Build with GitHub token
-docker build --build-arg GH_TOKEN=your_github_token_here -t copilot-api .
-
-# Run with GitHub token
-docker run -p 4141:4141 -e GH_TOKEN=your_github_token_here copilot-api
-
-# Run with additional options
-docker run -p 4141:4141 -e GH_TOKEN=your_token copilot-api start --verbose --port 4141
+docker run \
+  -p 4141:4141 \
+  -e GITHUB_TOKEN=your_github_token_here \
+  -v $(pwd)/config.yaml:/app/config.yaml \
+  copilot-api
 ```
 
 ### Docker Compose Example
@@ -105,7 +102,9 @@ services:
     ports:
       - "4141:4141"
     environment:
-      - GH_TOKEN=your_github_token_here
+      - GITHUB_TOKEN=your_github_token_here
+    volumes:
+      - ./config.yaml:/app/config.yaml
     restart: unless-stopped
 ```
 
@@ -141,7 +140,7 @@ npx copilot-api@latest auth
 Copilot API now uses a subcommand structure with these main commands:
 
 - `start`: Start the Copilot API server. This command will also handle authentication if needed.
-- `auth`: Run GitHub authentication flow without starting the server. This is typically used if you need to generate a token for use with the `--github-token` option, especially in non-interactive environments.
+- `auth`: Run GitHub authentication flow without starting the server. Use this to mint a GitHub token that you can paste into `config.yaml` or the corresponding environment variable.
 - `check-usage`: Show your current GitHub Copilot usage and quota information directly in the terminal (no server required).
 - `debug`: Display diagnostic information including version, runtime details, file paths, and authentication status. Useful for troubleshooting and support.
 
@@ -159,7 +158,6 @@ The following command line options are available for the `start` command:
 | --manual       | Enable manual request approval                                                | false      | none  |
 | --rate-limit   | Rate limit in seconds between requests                                        | none       | -r    |
 | --wait         | Wait instead of error when rate limit is hit                                  | false      | -w    |
-| --github-token | Provide GitHub token directly (must be generated using the `auth` subcommand) | none       | -g    |
 | --claude-code  | Generate a command to launch Claude Code with Copilot API config              | false      | -c    |
 | --show-token   | Show GitHub and Copilot tokens on fetch and refresh                           | false      | none  |
 | --proxy-env    | Initialize proxy from environment variables                                   | false      | none  |
@@ -257,9 +255,6 @@ npx copilot-api@latest start --rate-limit 30
 
 # Wait instead of error when rate limit is hit
 npx copilot-api@latest start --rate-limit 30 --wait
-
-# Provide GitHub token directly
-npx copilot-api@latest start --github-token ghp_YOUR_TOKEN_HERE
 
 # Run only the auth flow
 npx copilot-api@latest auth

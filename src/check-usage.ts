@@ -1,8 +1,9 @@
 import { defineCommand } from "citty"
 import consola from "consola"
 
+import { getAccountsConfig } from "./lib/account-config"
 import { ensurePaths } from "./lib/paths"
-import { setupGitHubToken } from "./lib/token"
+import { state } from "./lib/state"
 import {
   getCopilotUsage,
   type QuotaDetail,
@@ -15,7 +16,17 @@ export const checkUsage = defineCommand({
   },
   async run() {
     await ensurePaths()
-    await setupGitHubToken()
+    const accountsConfig = getAccountsConfig()
+    if (accountsConfig.accounts.length === 0) {
+      throw new Error("No accounts configured")
+    }
+
+    const defaultAccount = accountsConfig.accounts[0]
+
+    state.accountId = defaultAccount.id
+    state.githubToken = defaultAccount.githubToken
+    consola.info(`Using GitHub account "${defaultAccount.id}" from config`)
+
     try {
       const usage = await getCopilotUsage()
       const premium = usage.quota_snapshots.premium_interactions

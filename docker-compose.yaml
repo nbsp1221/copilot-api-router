@@ -1,0 +1,17 @@
+services:
+  copilot-api-router:
+    build: .
+    container_name: copilot-api-router
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      - PORT=${PORT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - MASTER_KEY=${MASTER_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      # Mount config.yaml so the container reads the same accounts config as your host
+      - ./config.yaml:/app/config.yaml:ro
+      # Optional: persist Copilot cache/state between restarts
+      - ./copilot-data:/root/.local/share/copilot-api
+    restart: unless-stopped
