@@ -147,6 +147,8 @@ export async function runServer(options: RunServerOptions): Promise<void> {
   })
 }
 
+const envPort = process.env.PORT?.trim() ?? "4141"
+
 export const start = defineCommand({
   meta: {
     name: "start",
@@ -156,7 +158,7 @@ export const start = defineCommand({
     port: {
       alias: "p",
       type: "string",
-      default: "4141",
+      default: envPort,
       description: "Port to listen on",
     },
     verbose: {
@@ -212,8 +214,13 @@ export const start = defineCommand({
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       rateLimitRaw === undefined ? undefined : Number.parseInt(rateLimitRaw, 10)
 
+    const port = Number.parseInt(args.port, 10)
+    if (Number.isNaN(port) || port <= 0 || port > 65535) {
+      throw new Error(`Invalid port: ${args.port}`)
+    }
+
     return runServer({
-      port: Number.parseInt(args.port, 10),
+      port,
       verbose: args.verbose,
       accountType: args["account-type"],
       manual: args.manual,

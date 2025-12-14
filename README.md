@@ -152,7 +152,7 @@ The following command line options are available for the `start` command:
 
 | Option         | Description                                                                   | Default    | Alias |
 | -------------- | ----------------------------------------------------------------------------- | ---------- | ----- |
-| --port         | Port to listen on                                                             | 4141       | -p    |
+| --port         | Port to listen on (defaults to `PORT` env or 4141)                             | 4141       | -p    |
 | --verbose      | Enable verbose logging                                                        | false      | -v    |
 | --account-type | Account type to use (individual, business, enterprise)                        | individual | -a    |
 | --manual       | Enable manual request approval                                                | false      | none  |
