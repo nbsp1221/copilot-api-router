@@ -51,6 +51,13 @@ export async function runServer(options: RunServerOptions): Promise<void> {
   state.rateLimitWait = options.rateLimitWait
   state.showToken = options.showToken
 
+  const masterKey = (process.env.MASTER_KEY ?? "").trim()
+  if (masterKey) {
+    consola.info("MASTER_KEY detected — inbound requests require Bearer auth")
+  } else {
+    consola.info("MASTER_KEY not set — inbound authentication disabled")
+  }
+
   const accountsConfig = getAccountsConfig()
   if (accountsConfig.accounts.length === 0) {
     throw new Error("No accounts configured")

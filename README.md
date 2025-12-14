@@ -162,6 +162,17 @@ The following command line options are available for the `start` command:
 | --show-token   | Show GitHub and Copilot tokens on fetch and refresh                           | false      | none  |
 | --proxy-env    | Initialize proxy from environment variables                                   | false      | none  |
 
+## Authentication
+
+Set `MASTER_KEY` to require every inbound request to include `Authorization: Bearer <MASTER_KEY>`. Leave it blank (default) when running on a trusted network.
+
+```sh
+MASTER_KEY=supersecret bun run dev
+curl -H "Authorization: Bearer supersecret" http://localhost:4141/v1/models
+```
+
+Anthropic endpoints (e.g., `/v1/messages`) return Anthropic-style authentication errors, while OpenAI-compatible routes return OpenAI-style errors.
+
 ### Auth Command Options
 
 | Option       | Description               | Default | Alias |
